@@ -5,9 +5,7 @@
  */
 package paint;
 
-import java.awt.Color;
-import java.awt.Point;
-import java.awt.image.BufferedImage;
+import sm.jjrh.ui.LienzoImagenes2D;
 
 /**
  *
@@ -23,9 +21,8 @@ public class VentanaInterna extends javax.swing.JInternalFrame {
     }
     
     public LienzoImagenes2D getLienzo(){
-        return lienzo1;
+        return lienzoImagenes2D1;
     }
-    
     
 
     /**
@@ -38,7 +35,7 @@ public class VentanaInterna extends javax.swing.JInternalFrame {
     private void initComponents() {
 
         jScrollPane1 = new javax.swing.JScrollPane();
-        lienzo1 = new paint.LienzoImagenes2D();
+        lienzoImagenes2D1 = new sm.jjrh.ui.LienzoImagenes2D();
 
         setClosable(true);
         setIconifiable(true);
@@ -68,20 +65,18 @@ public class VentanaInterna extends javax.swing.JInternalFrame {
 
         jScrollPane1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
 
-        lienzo1.setForeground(new java.awt.Color(255, 255, 255));
-
-        javax.swing.GroupLayout lienzo1Layout = new javax.swing.GroupLayout(lienzo1);
-        lienzo1.setLayout(lienzo1Layout);
-        lienzo1Layout.setHorizontalGroup(
-            lienzo1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout lienzoImagenes2D1Layout = new javax.swing.GroupLayout(lienzoImagenes2D1);
+        lienzoImagenes2D1.setLayout(lienzoImagenes2D1Layout);
+        lienzoImagenes2D1Layout.setHorizontalGroup(
+            lienzoImagenes2D1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 487, Short.MAX_VALUE)
         );
-        lienzo1Layout.setVerticalGroup(
-            lienzo1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        lienzoImagenes2D1Layout.setVerticalGroup(
+            lienzoImagenes2D1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 497, Short.MAX_VALUE)
         );
 
-        jScrollPane1.setViewportView(lienzo1);
+        jScrollPane1.setViewportView(lienzoImagenes2D1);
 
         getContentPane().add(jScrollPane1);
 
@@ -96,6 +91,6 @@ public class VentanaInterna extends javax.swing.JInternalFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane jScrollPane1;
-    private paint.LienzoImagenes2D lienzo1;
+    private sm.jjrh.ui.LienzoImagenes2D lienzoImagenes2D1;
     // End of variables declaration//GEN-END:variables
 }

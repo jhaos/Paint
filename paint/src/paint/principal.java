@@ -5,8 +5,10 @@
  */
 package paint;
 
-import java.awt.Checkbox;
+import sm.jjrh.ui.formas;
 import java.awt.Color;
+import java.awt.Desktop;
+import java.awt.FileDialog;
 import java.awt.Point;
 import java.awt.Transparency;
 import java.awt.color.ColorSpace;
@@ -25,15 +27,38 @@ import java.awt.image.LookupTable;
 import java.awt.image.RescaleOp;
 import java.awt.image.WritableRaster;
 import java.io.File;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import javax.imageio.ImageIO;
+import javax.swing.JColorChooser;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
+import javax.swing.JFormattedTextField;
 import javax.swing.JInternalFrame;
 import javax.swing.JOptionPane;
-import javax.swing.event.InternalFrameEvent;
+import javax.swing.JSlider;
+import javax.swing.JSpinner;
+import javax.swing.JToggleButton;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import sm.image.BlendOp;
+import sm.image.EqualizationOp;
 import sm.image.KernelProducer;
 import sm.image.LookupTableProducer;
+import sm.image.SubtractionOp;
+import sm.image.TintOp;
+import sm.jjrh.graficos.FormasGraficos;
+import sm.jrrh.imagen.DivideDupOp;
+import sm.jrrh.imagen.LagoOp;
+import sm.jrrh.imagen.Negativo;
+import sm.jrrh.imagen.SepiaOp;
+import sm.jrrh.imagen.UmbralizacionOp;
+import sm.jrrh.imagen.efectoComp;
+import sm.sound.SMClipPlayer;
+import sm.sound.SMPlayer;
+import sm.sound.SMRecorder;
+import sm.sound.SMSoundRecorder;
 /**
  *
  * @author julius
@@ -43,7 +68,7 @@ public class principal extends javax.swing.JFrame {
     /**
      * Creates new form principal
      */
-    private boolean primera = true, isYCC, isGREY, isRGB;
+    private boolean focoPerdido = false;
     protected BufferedImage mainImage;
     protected BufferedImage prIm;
     private int brillo;
@@ -52,12 +77,19 @@ public class principal extends javax.swing.JFrame {
     private String tituloBanda;
     private static Color colores[] = {Color.red, Color.black, Color.blue, Color.green, Color.white, Color.yellow};
     private listaColores lista = new listaColores();
+    private SMPlayer player = null;
+    private SMRecorder recorder = null;
+    int n = 1, separacion_y = 0, separacion_x = 0;
+    private manejadorLienzo manejador = new manejadorLienzo(this);
+    private static String def = "Sin seleccion";
+    private boolean bandas = false;
     
     public principal() {
         initComponents();
         this.setTitle("Paint");
-        jComboBox2.setRenderer(lista);
- 
+        listaEditar.addItem((Object)def);
+        ListaColores.setRenderer(lista);
+        ListaRelleno.setRenderer(lista);
     } 
 
     /**
@@ -84,10 +116,21 @@ public class principal extends javax.swing.JFrame {
         oscurecer = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
         seno = new javax.swing.JButton();
+        jButton6 = new javax.swing.JButton();
+        sepia = new javax.swing.JButton();
         jButton1 = new javax.swing.JButton();
+        ecualizador = new javax.swing.JButton();
+        lago = new javax.swing.JButton();
+        opComp = new javax.swing.JButton();
+        jButton5 = new javax.swing.JButton();
+        sliderTintado = new javax.swing.JSlider();
+        nivelTintado = new javax.swing.JTextField();
+        jButton7 = new javax.swing.JButton();
+        asin = new javax.swing.JButton();
         jPanel9 = new javax.swing.JPanel();
         jButton2 = new javax.swing.JButton();
         gamas = new javax.swing.JComboBox<>();
+        umbralizacion = new javax.swing.JSlider();
         jPanel5 = new javax.swing.JPanel();
         jSlider3 = new javax.swing.JSlider();
         giro90 = new javax.swing.JButton();
@@ -96,6 +139,9 @@ public class principal extends javax.swing.JFrame {
         jPanel8 = new javax.swing.JPanel();
         jButton3 = new javax.swing.JButton();
         jButton4 = new javax.swing.JButton();
+        jPanel18 = new javax.swing.JPanel();
+        suma = new javax.swing.JButton();
+        resta = new javax.swing.JButton();
         jToolBar1 = new javax.swing.JToolBar();
         jPanel11 = new javax.swing.JPanel();
         botonNuevo = new javax.swing.JToggleButton();
@@ -107,49 +153,58 @@ public class principal extends javax.swing.JFrame {
         botonRaya = new javax.swing.JToggleButton();
         botonRectangulo = new javax.swing.JToggleButton();
         botonCirculo = new javax.swing.JToggleButton();
-        botonSeleccionar = new javax.swing.JToggleButton();
         jSeparator2 = new javax.swing.JToolBar.Separator();
         jPanel12 = new javax.swing.JPanel();
         jPanel13 = new javax.swing.JPanel();
-        jSpinner1 = new javax.swing.JSpinner();
+        spinnerStroke = new javax.swing.JSpinner();
         botonRelleno = new javax.swing.JToggleButton();
-        botonTransparencia = new javax.swing.JToggleButton();
         botonAlisar = new javax.swing.JToggleButton();
+        Degradado = new javax.swing.JComboBox<>();
+        X = new javax.swing.JFormattedTextField();
+        Y = new javax.swing.JFormattedTextField();
+        transparencia = new javax.swing.JSlider();
+        cambioStroke = new javax.swing.JToggleButton();
         jSeparator3 = new javax.swing.JToolBar.Separator();
         jPanel15 = new javax.swing.JPanel();
-        jComboBox2 = new javax.swing.JComboBox(colores);
+        ListaColores = new javax.swing.JComboBox(colores);
+        paleta = new javax.swing.JButton();
+        jPanel10 = new javax.swing.JPanel();
+        ListaRelleno = new javax.swing.JComboBox(colores);
+        jPanel16 = new javax.swing.JPanel();
+        listaEditar = new javax.swing.JComboBox<>();
+        jPanel17 = new javax.swing.JPanel();
+        botonPlay = new javax.swing.JButton();
+        botonStop = new javax.swing.JButton();
+        listaCanciones = new javax.swing.JComboBox<>();
+        grabar = new javax.swing.JButton();
         jDesktopPane1 = new javax.swing.JDesktopPane();
         jMenuBar1 = new javax.swing.JMenuBar();
+        ListaColores.getModel().setSelectedItem(Color.red);
         menuArchivo = new javax.swing.JMenu();
         itemNuevo = new javax.swing.JMenuItem();
+        ListaColores.getModel().setSelectedItem(Color.red);
         itemAbrir = new javax.swing.JMenuItem();
         itemGuardar = new javax.swing.JMenuItem();
-        submenuImprimir = new javax.swing.JMenu();
-        itemImpersora = new javax.swing.JMenuItem();
-        itemFichero = new javax.swing.JMenuItem();
         menuEditar = new javax.swing.JMenu();
-        itemCopiar = new javax.swing.JMenuItem();
-        itemCortar = new javax.swing.JMenuItem();
-        itemPegar = new javax.swing.JMenuItem();
         jMenuItem1 = new javax.swing.JMenuItem();
         jMenuItem2 = new javax.swing.JMenuItem();
         jMenuItem3 = new javax.swing.JMenuItem();
         menuImagen = new javax.swing.JMenu();
         rescale = new javax.swing.JMenuItem();
-        convolve = new javax.swing.JMenuItem();
         afine = new javax.swing.JMenuItem();
         banda = new javax.swing.JMenuItem();
+        jMenu1 = new javax.swing.JMenu();
+        jMenuItem5 = new javax.swing.JMenuItem();
         jMenuItem4 = new javax.swing.JMenuItem();
-        coverter = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMaximumSize(new java.awt.Dimension(1300, 900));
-        setMinimumSize(new java.awt.Dimension(1300, 900));
-        setPreferredSize(new java.awt.Dimension(1300, 900));
+        setMaximumSize(new java.awt.Dimension(1700, 900));
+        setMinimumSize(new java.awt.Dimension(1700, 900));
+        setPreferredSize(new java.awt.Dimension(1700, 900));
 
-        jPanel1.setMaximumSize(new java.awt.Dimension(1100, 100));
-        jPanel1.setMinimumSize(new java.awt.Dimension(1100, 100));
-        jPanel1.setPreferredSize(new java.awt.Dimension(1100, 100));
+        jPanel1.setMaximumSize(new java.awt.Dimension(1500, 100));
+        jPanel1.setMinimumSize(new java.awt.Dimension(1500, 100));
+        jPanel1.setPreferredSize(new java.awt.Dimension(1500, 100));
         jPanel1.setLayout(new java.awt.BorderLayout());
 
         jPanel3.setLayout(new java.awt.GridLayout(1, 0));
@@ -161,27 +216,28 @@ public class principal extends javax.swing.JFrame {
 
         jPanel1.add(jPanel3, java.awt.BorderLayout.PAGE_END);
 
-        jPanel7.setMaximumSize(new java.awt.Dimension(800, 100));
-        jPanel7.setMinimumSize(new java.awt.Dimension(800, 100));
+        jPanel7.setMaximumSize(new java.awt.Dimension(1500, 50));
+        jPanel7.setMinimumSize(new java.awt.Dimension(1500, 50));
         jPanel7.setName(""); // NOI18N
-        jPanel7.setPreferredSize(new java.awt.Dimension(800, 100));
+        jPanel7.setPreferredSize(new java.awt.Dimension(1500, 50));
         jPanel7.setRequestFocusEnabled(false);
         jPanel7.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
 
-        jPanel14.setMaximumSize(new java.awt.Dimension(300, 60));
-        jPanel14.setMinimumSize(new java.awt.Dimension(300, 60));
+        jPanel14.setMaximumSize(new java.awt.Dimension(280, 60));
+        jPanel14.setMinimumSize(new java.awt.Dimension(280, 60));
         jPanel14.setName(""); // NOI18N
-        jPanel14.setPreferredSize(new java.awt.Dimension(300, 60));
+        jPanel14.setPreferredSize(new java.awt.Dimension(280, 60));
         jPanel14.setRequestFocusEnabled(false);
         jPanel14.setVerifyInputWhenFocusTarget(false);
         jPanel14.setLayout(new javax.swing.BoxLayout(jPanel14, javax.swing.BoxLayout.LINE_AXIS));
 
         jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Media5x5", "Media7x7", "Binomial", "Enfoque", "Relieve", "Fronteras", "Deshacer", "" }));
+        jComboBox1.setToolTipText("Filtro");
         jComboBox1.setBorder(javax.swing.BorderFactory.createTitledBorder("Filtro"));
-        jComboBox1.setMaximumSize(new java.awt.Dimension(150, 120));
-        jComboBox1.setMinimumSize(new java.awt.Dimension(150, 120));
+        jComboBox1.setMaximumSize(new java.awt.Dimension(160, 60));
+        jComboBox1.setMinimumSize(new java.awt.Dimension(160, 60));
         jComboBox1.setName(""); // NOI18N
-        jComboBox1.setPreferredSize(new java.awt.Dimension(150, 120));
+        jComboBox1.setPreferredSize(new java.awt.Dimension(160, 60));
         jComboBox1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jComboBox1ActionPerformed(evt);
@@ -191,11 +247,12 @@ public class principal extends javax.swing.JFrame {
 
         jSlider1.setMaximum(255);
         jSlider1.setMinimum(-255);
+        jSlider1.setToolTipText("Brillo");
         jSlider1.setValue(0);
         jSlider1.setBorder(javax.swing.BorderFactory.createTitledBorder("Brillo"));
-        jSlider1.setMaximumSize(new java.awt.Dimension(150, 110));
-        jSlider1.setMinimumSize(new java.awt.Dimension(150, 110));
-        jSlider1.setPreferredSize(new java.awt.Dimension(150, 110));
+        jSlider1.setMaximumSize(new java.awt.Dimension(100, 110));
+        jSlider1.setMinimumSize(new java.awt.Dimension(100, 110));
+        jSlider1.setPreferredSize(new java.awt.Dimension(100, 110));
         jSlider1.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 jSlider1StateChanged(evt);
@@ -214,16 +271,17 @@ public class principal extends javax.swing.JFrame {
         jPanel7.add(jPanel14);
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Contraste"));
-        jPanel2.setMaximumSize(new java.awt.Dimension(180, 60));
-        jPanel2.setMinimumSize(new java.awt.Dimension(180, 60));
-        jPanel2.setPreferredSize(new java.awt.Dimension(180, 60));
+        jPanel2.setMaximumSize(new java.awt.Dimension(120, 60));
+        jPanel2.setMinimumSize(new java.awt.Dimension(120, 60));
+        jPanel2.setPreferredSize(new java.awt.Dimension(120, 60));
         jPanel2.setVerifyInputWhenFocusTarget(false);
         jPanel2.setLayout(new javax.swing.BoxLayout(jPanel2, javax.swing.BoxLayout.LINE_AXIS));
 
         contraste.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/contraste.png"))); // NOI18N
-        contraste.setMaximumSize(new java.awt.Dimension(50, 25));
-        contraste.setMinimumSize(new java.awt.Dimension(50, 25));
-        contraste.setPreferredSize(new java.awt.Dimension(50, 25));
+        contraste.setToolTipText("Normal");
+        contraste.setMaximumSize(new java.awt.Dimension(30, 20));
+        contraste.setMinimumSize(new java.awt.Dimension(30, 20));
+        contraste.setPreferredSize(new java.awt.Dimension(30, 20));
         contraste.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 contrasteActionPerformed(evt);
@@ -232,9 +290,10 @@ public class principal extends javax.swing.JFrame {
         jPanel2.add(contraste);
 
         iluminar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/iluminar.png"))); // NOI18N
-        iluminar.setMaximumSize(new java.awt.Dimension(50, 25));
-        iluminar.setMinimumSize(new java.awt.Dimension(50, 25));
-        iluminar.setPreferredSize(new java.awt.Dimension(50, 25));
+        iluminar.setToolTipText("Claro");
+        iluminar.setMaximumSize(new java.awt.Dimension(30, 20));
+        iluminar.setMinimumSize(new java.awt.Dimension(30, 20));
+        iluminar.setPreferredSize(new java.awt.Dimension(30, 20));
         iluminar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 iluminarActionPerformed(evt);
@@ -243,9 +302,10 @@ public class principal extends javax.swing.JFrame {
         jPanel2.add(iluminar);
 
         oscurecer.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/oscurecer.png"))); // NOI18N
-        oscurecer.setMaximumSize(new java.awt.Dimension(50, 25));
-        oscurecer.setMinimumSize(new java.awt.Dimension(50, 25));
-        oscurecer.setPreferredSize(new java.awt.Dimension(50, 25));
+        oscurecer.setToolTipText("Oscuro");
+        oscurecer.setMaximumSize(new java.awt.Dimension(30, 20));
+        oscurecer.setMinimumSize(new java.awt.Dimension(30, 20));
+        oscurecer.setPreferredSize(new java.awt.Dimension(30, 20));
         oscurecer.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 oscurecerActionPerformed(evt);
@@ -255,17 +315,18 @@ public class principal extends javax.swing.JFrame {
 
         jPanel7.add(jPanel2);
 
-        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Onda"));
-        jPanel4.setMaximumSize(new java.awt.Dimension(120, 60));
-        jPanel4.setMinimumSize(new java.awt.Dimension(120, 60));
-        jPanel4.setPreferredSize(new java.awt.Dimension(120, 60));
+        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Procesamiento"));
+        jPanel4.setMaximumSize(new java.awt.Dimension(570, 70));
+        jPanel4.setMinimumSize(new java.awt.Dimension(570, 70));
+        jPanel4.setPreferredSize(new java.awt.Dimension(570, 70));
         jPanel4.setRequestFocusEnabled(false);
         jPanel4.setLayout(new javax.swing.BoxLayout(jPanel4, javax.swing.BoxLayout.LINE_AXIS));
 
         seno.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/sinusoidal.png"))); // NOI18N
-        seno.setMaximumSize(new java.awt.Dimension(50, 25));
-        seno.setMinimumSize(new java.awt.Dimension(50, 25));
-        seno.setPreferredSize(new java.awt.Dimension(50, 25));
+        seno.setToolTipText("Seno");
+        seno.setMaximumSize(new java.awt.Dimension(30, 20));
+        seno.setMinimumSize(new java.awt.Dimension(30, 20));
+        seno.setPreferredSize(new java.awt.Dimension(30, 20));
         seno.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 senoActionPerformed(evt);
@@ -273,24 +334,137 @@ public class principal extends javax.swing.JFrame {
         });
         jPanel4.add(seno);
 
-        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/sepia.png"))); // NOI18N
-        jButton1.setMaximumSize(new java.awt.Dimension(50, 25));
-        jButton1.setMinimumSize(new java.awt.Dimension(50, 25));
-        jButton1.setPreferredSize(new java.awt.Dimension(50, 25));
+        jButton6.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/film.png"))); // NOI18N
+        jButton6.setMaximumSize(new java.awt.Dimension(45, 20));
+        jButton6.setMinimumSize(new java.awt.Dimension(45, 20));
+        jButton6.setPreferredSize(new java.awt.Dimension(45, 20));
+        jButton6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton6ActionPerformed(evt);
+            }
+        });
+        jPanel4.add(jButton6);
+
+        sepia.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/sepia.png"))); // NOI18N
+        sepia.setToolTipText("Sepia");
+        sepia.setMaximumSize(new java.awt.Dimension(30, 20));
+        sepia.setMinimumSize(new java.awt.Dimension(30, 20));
+        sepia.setPreferredSize(new java.awt.Dimension(30, 20));
+        sepia.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                sepiaActionPerformed(evt);
+            }
+        });
+        jPanel4.add(sepia);
+
+        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/tintar.png"))); // NOI18N
+        jButton1.setMaximumSize(new java.awt.Dimension(30, 20));
+        jButton1.setMinimumSize(new java.awt.Dimension(30, 20));
+        jButton1.setPreferredSize(new java.awt.Dimension(30, 20));
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
         jPanel4.add(jButton1);
+
+        ecualizador.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/ecualizar.png"))); // NOI18N
+        ecualizador.setMaximumSize(new java.awt.Dimension(30, 20));
+        ecualizador.setMinimumSize(new java.awt.Dimension(30, 20));
+        ecualizador.setPreferredSize(new java.awt.Dimension(50, 25));
+        ecualizador.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ecualizadorActionPerformed(evt);
+            }
+        });
+        jPanel4.add(ecualizador);
+
+        lago.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/sea.png"))); // NOI18N
+        lago.setMaximumSize(new java.awt.Dimension(30, 20));
+        lago.setMinimumSize(new java.awt.Dimension(30, 20));
+        lago.setPreferredSize(new java.awt.Dimension(30, 20));
+        lago.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                lagoActionPerformed(evt);
+            }
+        });
+        jPanel4.add(lago);
+
+        opComp.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/filter.png"))); // NOI18N
+        opComp.setMaximumSize(new java.awt.Dimension(30, 20));
+        opComp.setMinimumSize(new java.awt.Dimension(30, 20));
+        opComp.setPreferredSize(new java.awt.Dimension(30, 20));
+        opComp.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                opCompActionPerformed(evt);
+            }
+        });
+        jPanel4.add(opComp);
+
+        jButton5.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/division.png"))); // NOI18N
+        jButton5.setMaximumSize(new java.awt.Dimension(60, 20));
+        jButton5.setMinimumSize(new java.awt.Dimension(60, 20));
+        jButton5.setPreferredSize(new java.awt.Dimension(60, 20));
+        jButton5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton5ActionPerformed(evt);
+            }
+        });
+        jPanel4.add(jButton5);
+
+        sliderTintado.setValue(0);
+        sliderTintado.setMaximumSize(new java.awt.Dimension(100, 16));
+        sliderTintado.setMinimumSize(new java.awt.Dimension(100, 16));
+        sliderTintado.setPreferredSize(new java.awt.Dimension(100, 16));
+        sliderTintado.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                sliderTintadoStateChanged(evt);
+            }
+        });
+        sliderTintado.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                sliderTintadoFocusLost(evt);
+            }
+        });
+        jPanel4.add(sliderTintado);
+
+        nivelTintado.setMaximumSize(new java.awt.Dimension(30, 70));
+        nivelTintado.setMinimumSize(new java.awt.Dimension(30, 70));
+        nivelTintado.setPreferredSize(new java.awt.Dimension(30, 70));
+        jPanel4.add(nivelTintado);
+
+        jButton7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/layer-button.png"))); // NOI18N
+        jButton7.setMaximumSize(new java.awt.Dimension(45, 20));
+        jButton7.setMinimumSize(new java.awt.Dimension(45, 20));
+        jButton7.setPreferredSize(new java.awt.Dimension(45, 20));
+        jButton7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton7ActionPerformed(evt);
+            }
+        });
+        jPanel4.add(jButton7);
+
+        asin.setText("asin");
+        asin.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                asinActionPerformed(evt);
+            }
+        });
+        jPanel4.add(asin);
 
         jPanel7.add(jPanel4);
 
-        jPanel9.setBorder(javax.swing.BorderFactory.createTitledBorder("Color"));
-        jPanel9.setMaximumSize(new java.awt.Dimension(150, 70));
-        jPanel9.setMinimumSize(new java.awt.Dimension(150, 70));
-        jPanel9.setPreferredSize(new java.awt.Dimension(150, 70));
+        jPanel9.setBorder(javax.swing.BorderFactory.createTitledBorder("Bandas y Umbralizacion"));
+        jPanel9.setMaximumSize(new java.awt.Dimension(250, 60));
+        jPanel9.setMinimumSize(new java.awt.Dimension(250, 60));
+        jPanel9.setPreferredSize(new java.awt.Dimension(250, 60));
         jPanel9.setLayout(new javax.swing.BoxLayout(jPanel9, javax.swing.BoxLayout.LINE_AXIS));
 
         jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/bandas.png"))); // NOI18N
-        jButton2.setMaximumSize(new java.awt.Dimension(50, 50));
-        jButton2.setMinimumSize(new java.awt.Dimension(50, 50));
-        jButton2.setPreferredSize(new java.awt.Dimension(50, 50));
+        jButton2.setToolTipText("Extraer Bandas");
+        jButton2.setMaximumSize(new java.awt.Dimension(50, 70));
+        jButton2.setMinimumSize(new java.awt.Dimension(50, 70));
+        jButton2.setPreferredSize(new java.awt.Dimension(50, 70));
         jButton2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
@@ -299,6 +473,7 @@ public class principal extends javax.swing.JFrame {
         jPanel9.add(jButton2);
 
         gamas.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "RGB", "YCC", "GREY" }));
+        gamas.setToolTipText("Bandas");
         gamas.setMaximumSize(new java.awt.Dimension(70, 50));
         gamas.setMinimumSize(new java.awt.Dimension(70, 50));
         gamas.setPreferredSize(new java.awt.Dimension(70, 50));
@@ -309,17 +484,35 @@ public class principal extends javax.swing.JFrame {
         });
         jPanel9.add(gamas);
 
+        umbralizacion.setMaximum(255);
+        umbralizacion.setValue(0);
+        umbralizacion.setMaximumSize(new java.awt.Dimension(75, 16));
+        umbralizacion.setMinimumSize(new java.awt.Dimension(75, 16));
+        umbralizacion.setPreferredSize(new java.awt.Dimension(75, 16));
+        umbralizacion.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                umbralizacionStateChanged(evt);
+            }
+        });
+        umbralizacion.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                umbralizacionMouseReleased(evt);
+            }
+        });
+        jPanel9.add(umbralizacion);
+
         jPanel7.add(jPanel9);
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Rotación"));
-        jPanel5.setMaximumSize(new java.awt.Dimension(280, 60));
-        jPanel5.setMinimumSize(new java.awt.Dimension(280, 60));
-        jPanel5.setPreferredSize(new java.awt.Dimension(280, 60));
+        jPanel5.setMaximumSize(new java.awt.Dimension(220, 60));
+        jPanel5.setMinimumSize(new java.awt.Dimension(220, 60));
+        jPanel5.setPreferredSize(new java.awt.Dimension(220, 60));
         jPanel5.setRequestFocusEnabled(false);
         jPanel5.setLayout(new javax.swing.BoxLayout(jPanel5, javax.swing.BoxLayout.LINE_AXIS));
 
         jSlider3.setMaximum(360);
         jSlider3.setMinimum(-360);
+        jSlider3.setToolTipText("Rotar");
         jSlider3.setValue(0);
         jSlider3.setMaximumSize(new java.awt.Dimension(100, 20));
         jSlider3.setMinimumSize(new java.awt.Dimension(100, 20));
@@ -340,9 +533,10 @@ public class principal extends javax.swing.JFrame {
         jPanel5.add(jSlider3);
 
         giro90.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/rotacion90.png"))); // NOI18N
-        giro90.setMaximumSize(new java.awt.Dimension(50, 25));
-        giro90.setMinimumSize(new java.awt.Dimension(50, 25));
-        giro90.setPreferredSize(new java.awt.Dimension(50, 25));
+        giro90.setToolTipText("Rotar 90");
+        giro90.setMaximumSize(new java.awt.Dimension(30, 20));
+        giro90.setMinimumSize(new java.awt.Dimension(30, 20));
+        giro90.setPreferredSize(new java.awt.Dimension(30, 20));
         giro90.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 giro90ActionPerformed(evt);
@@ -351,6 +545,10 @@ public class principal extends javax.swing.JFrame {
         jPanel5.add(giro90);
 
         giro180.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/rotacion180.png"))); // NOI18N
+        giro180.setToolTipText("Rotar 180");
+        giro180.setMaximumSize(new java.awt.Dimension(30, 20));
+        giro180.setMinimumSize(new java.awt.Dimension(30, 20));
+        giro180.setPreferredSize(new java.awt.Dimension(30, 20));
         giro180.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 giro180ActionPerformed(evt);
@@ -359,9 +557,10 @@ public class principal extends javax.swing.JFrame {
         jPanel5.add(giro180);
 
         giro270.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/rotacion270.png"))); // NOI18N
-        giro270.setMaximumSize(new java.awt.Dimension(50, 25));
-        giro270.setMinimumSize(new java.awt.Dimension(50, 25));
-        giro270.setPreferredSize(new java.awt.Dimension(50, 25));
+        giro270.setToolTipText("Rotar 270");
+        giro270.setMaximumSize(new java.awt.Dimension(30, 20));
+        giro270.setMinimumSize(new java.awt.Dimension(30, 20));
+        giro270.setPreferredSize(new java.awt.Dimension(30, 20));
         giro270.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 giro270ActionPerformed(evt);
@@ -372,15 +571,16 @@ public class principal extends javax.swing.JFrame {
         jPanel7.add(jPanel5);
 
         jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder("Escala"));
-        jPanel8.setMaximumSize(new java.awt.Dimension(130, 60));
-        jPanel8.setMinimumSize(new java.awt.Dimension(130, 60));
-        jPanel8.setPreferredSize(new java.awt.Dimension(130, 60));
+        jPanel8.setMaximumSize(new java.awt.Dimension(90, 60));
+        jPanel8.setMinimumSize(new java.awt.Dimension(90, 60));
+        jPanel8.setPreferredSize(new java.awt.Dimension(90, 60));
         jPanel8.setLayout(new javax.swing.BoxLayout(jPanel8, javax.swing.BoxLayout.LINE_AXIS));
 
         jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/aumentar.png"))); // NOI18N
-        jButton3.setMaximumSize(new java.awt.Dimension(50, 25));
-        jButton3.setMinimumSize(new java.awt.Dimension(50, 25));
-        jButton3.setPreferredSize(new java.awt.Dimension(50, 25));
+        jButton3.setToolTipText("Agrandar");
+        jButton3.setMaximumSize(new java.awt.Dimension(30, 20));
+        jButton3.setMinimumSize(new java.awt.Dimension(30, 20));
+        jButton3.setPreferredSize(new java.awt.Dimension(30, 20));
         jButton3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);
@@ -389,9 +589,10 @@ public class principal extends javax.swing.JFrame {
         jPanel8.add(jButton3);
 
         jButton4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/disminuir.png"))); // NOI18N
-        jButton4.setMaximumSize(new java.awt.Dimension(50, 25));
-        jButton4.setMinimumSize(new java.awt.Dimension(50, 25));
-        jButton4.setPreferredSize(new java.awt.Dimension(50, 25));
+        jButton4.setToolTipText("Disminuir");
+        jButton4.setMaximumSize(new java.awt.Dimension(30, 20));
+        jButton4.setMinimumSize(new java.awt.Dimension(30, 20));
+        jButton4.setPreferredSize(new java.awt.Dimension(30, 20));
         jButton4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton4ActionPerformed(evt);
@@ -401,19 +602,53 @@ public class principal extends javax.swing.JFrame {
 
         jPanel7.add(jPanel8);
 
+        jPanel18.setBorder(javax.swing.BorderFactory.createTitledBorder("Suma y Resta"));
+        jPanel18.setMaximumSize(new java.awt.Dimension(100, 60));
+        jPanel18.setMinimumSize(new java.awt.Dimension(100, 60));
+        jPanel18.setPreferredSize(new java.awt.Dimension(100, 60));
+        jPanel18.setLayout(new javax.swing.BoxLayout(jPanel18, javax.swing.BoxLayout.LINE_AXIS));
+
+        suma.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/aumentar.png"))); // NOI18N
+        suma.setMaximumSize(new java.awt.Dimension(30, 20));
+        suma.setMinimumSize(new java.awt.Dimension(30, 20));
+        suma.setPreferredSize(new java.awt.Dimension(30, 20));
+        suma.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                sumaActionPerformed(evt);
+            }
+        });
+        jPanel18.add(suma);
+
+        resta.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/disminuir.png"))); // NOI18N
+        resta.setMaximumSize(new java.awt.Dimension(30, 20));
+        resta.setMinimumSize(new java.awt.Dimension(30, 20));
+        resta.setPreferredSize(new java.awt.Dimension(30, 20));
+        resta.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                restaActionPerformed(evt);
+            }
+        });
+        jPanel18.add(resta);
+
+        jPanel7.add(jPanel18);
+
         jPanel1.add(jPanel7, java.awt.BorderLayout.CENTER);
 
         getContentPane().add(jPanel1, java.awt.BorderLayout.PAGE_END);
 
         jToolBar1.setRollover(true);
-        jToolBar1.setMaximumSize(new java.awt.Dimension(800, 70));
-        jToolBar1.setMinimumSize(new java.awt.Dimension(800, 70));
-        jToolBar1.setPreferredSize(new java.awt.Dimension(798, 70));
+        jToolBar1.setMaximumSize(new java.awt.Dimension(1500, 70));
+        jToolBar1.setMinimumSize(new java.awt.Dimension(1500, 70));
+        jToolBar1.setPreferredSize(new java.awt.Dimension(1500, 70));
 
         jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder("Archivo"));
         jPanel11.setLayout(new javax.swing.BoxLayout(jPanel11, javax.swing.BoxLayout.LINE_AXIS));
 
         botonNuevo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/nuevo.png"))); // NOI18N
+        botonNuevo.setToolTipText("Nuevo");
+        botonNuevo.setMaximumSize(new java.awt.Dimension(58, 34));
+        botonNuevo.setMinimumSize(new java.awt.Dimension(58, 34));
+        botonNuevo.setPreferredSize(new java.awt.Dimension(58, 34));
         botonNuevo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 botonNuevoActionPerformed(evt);
@@ -422,9 +657,7 @@ public class principal extends javax.swing.JFrame {
         jPanel11.add(botonNuevo);
 
         botonAbrir.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/abrir.png"))); // NOI18N
-        botonAbrir.setMaximumSize(new java.awt.Dimension(56, 32));
-        botonAbrir.setMinimumSize(new java.awt.Dimension(56, 32));
-        botonAbrir.setPreferredSize(new java.awt.Dimension(56, 32));
+        botonAbrir.setToolTipText("Abrir Imagen/Audio");
         botonAbrir.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 botonAbrirActionPerformed(evt);
@@ -433,6 +666,10 @@ public class principal extends javax.swing.JFrame {
         jPanel11.add(botonAbrir);
 
         botonGuardar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/guardar.png"))); // NOI18N
+        botonGuardar.setToolTipText("Guardar Imagen/Audio");
+        botonGuardar.setMaximumSize(new java.awt.Dimension(58, 34));
+        botonGuardar.setMinimumSize(new java.awt.Dimension(58, 34));
+        botonGuardar.setPreferredSize(new java.awt.Dimension(58, 34));
         botonGuardar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 botonGuardarActionPerformed(evt);
@@ -446,11 +683,12 @@ public class principal extends javax.swing.JFrame {
         jSeparator1.setSeparatorSize(new java.awt.Dimension(5, 33));
         jToolBar1.add(jSeparator1);
 
-        jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder("Formas/Mover"));
+        jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder("Formas"));
         jPanel6.setLayout(new javax.swing.BoxLayout(jPanel6, javax.swing.BoxLayout.LINE_AXIS));
 
         buttonGroup1.add(botonLapiz);
         botonLapiz.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/punto.png"))); // NOI18N
+        botonLapiz.setToolTipText("Pintar Punto");
         botonLapiz.setFocusable(false);
         botonLapiz.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         botonLapiz.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -463,6 +701,7 @@ public class principal extends javax.swing.JFrame {
 
         buttonGroup1.add(botonRaya);
         botonRaya.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/linea.png"))); // NOI18N
+        botonRaya.setToolTipText("Pintar Linea");
         botonRaya.setFocusable(false);
         botonRaya.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         botonRaya.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -475,6 +714,7 @@ public class principal extends javax.swing.JFrame {
 
         buttonGroup1.add(botonRectangulo);
         botonRectangulo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/rectangulo.png"))); // NOI18N
+        botonRectangulo.setToolTipText("Pintar Rectangulo");
         botonRectangulo.setFocusable(false);
         botonRectangulo.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         botonRectangulo.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -487,6 +727,7 @@ public class principal extends javax.swing.JFrame {
 
         buttonGroup1.add(botonCirculo);
         botonCirculo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/elipse.png"))); // NOI18N
+        botonCirculo.setToolTipText("Pintar Circunferencia");
         botonCirculo.setFocusable(false);
         botonCirculo.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         botonCirculo.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -496,14 +737,6 @@ public class principal extends javax.swing.JFrame {
             }
         });
         jPanel6.add(botonCirculo);
-
-        botonSeleccionar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/seleccion.png"))); // NOI18N
-        botonSeleccionar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                botonSeleccionarActionPerformed(evt);
-            }
-        });
-        jPanel6.add(botonSeleccionar);
 
         jToolBar1.add(jPanel6);
 
@@ -515,21 +748,26 @@ public class principal extends javax.swing.JFrame {
         jToolBar1.add(jPanel12);
 
         jPanel13.setBorder(javax.swing.BorderFactory.createTitledBorder("Edicion"));
+        jPanel13.setMaximumSize(new java.awt.Dimension(500, 70));
+        jPanel13.setMinimumSize(new java.awt.Dimension(500, 70));
+        jPanel13.setPreferredSize(new java.awt.Dimension(500, 70));
         jPanel13.setLayout(new javax.swing.BoxLayout(jPanel13, javax.swing.BoxLayout.LINE_AXIS));
 
-        jSpinner1.setMaximumSize(new java.awt.Dimension(56, 32));
-        jSpinner1.setMinimumSize(new java.awt.Dimension(56, 32));
-        jSpinner1.setName(""); // NOI18N
-        jSpinner1.setPreferredSize(new java.awt.Dimension(56, 32));
-        jSpinner1.setRequestFocusEnabled(false);
-        jSpinner1.addChangeListener(new javax.swing.event.ChangeListener() {
+        spinnerStroke.setToolTipText("Grosor");
+        spinnerStroke.setMaximumSize(new java.awt.Dimension(56, 32));
+        spinnerStroke.setMinimumSize(new java.awt.Dimension(56, 32));
+        spinnerStroke.setName(""); // NOI18N
+        spinnerStroke.setPreferredSize(new java.awt.Dimension(56, 32));
+        spinnerStroke.setRequestFocusEnabled(false);
+        spinnerStroke.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                jSpinner1StateChanged(evt);
+                spinnerStrokeStateChanged(evt);
             }
         });
-        jPanel13.add(jSpinner1);
+        jPanel13.add(spinnerStroke);
 
         botonRelleno.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/rellenar.png"))); // NOI18N
+        botonRelleno.setToolTipText("Relleno");
         botonRelleno.setMaximumSize(new java.awt.Dimension(56, 32));
         botonRelleno.setMinimumSize(new java.awt.Dimension(56, 32));
         botonRelleno.setPreferredSize(new java.awt.Dimension(56, 32));
@@ -540,18 +778,8 @@ public class principal extends javax.swing.JFrame {
         });
         jPanel13.add(botonRelleno);
 
-        botonTransparencia.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/transparencia.png"))); // NOI18N
-        botonTransparencia.setMaximumSize(new java.awt.Dimension(56, 32));
-        botonTransparencia.setMinimumSize(new java.awt.Dimension(56, 32));
-        botonTransparencia.setPreferredSize(new java.awt.Dimension(56, 32));
-        botonTransparencia.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                botonTransparenciaActionPerformed(evt);
-            }
-        });
-        jPanel13.add(botonTransparencia);
-
         botonAlisar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/alisar.png"))); // NOI18N
+        botonAlisar.setToolTipText("Alisar");
         botonAlisar.setMaximumSize(new java.awt.Dimension(56, 32));
         botonAlisar.setMinimumSize(new java.awt.Dimension(56, 32));
         botonAlisar.setPreferredSize(new java.awt.Dimension(56, 32));
@@ -562,42 +790,179 @@ public class principal extends javax.swing.JFrame {
         });
         jPanel13.add(botonAlisar);
 
+        Degradado.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Relleno", "Horizontal", "Vertical", "Diagonal" }));
+        Degradado.setMaximumSize(new java.awt.Dimension(100, 32));
+        Degradado.setMinimumSize(new java.awt.Dimension(100, 32));
+        Degradado.setPreferredSize(new java.awt.Dimension(100, 32));
+        Degradado.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                DegradadoActionPerformed(evt);
+            }
+        });
+        jPanel13.add(Degradado);
+
+        X.setText("X");
+        X.setMaximumSize(new java.awt.Dimension(30, 30));
+        X.setMinimumSize(new java.awt.Dimension(30, 30));
+        X.setPreferredSize(new java.awt.Dimension(30, 30));
+        X.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                XActionPerformed(evt);
+            }
+        });
+        jPanel13.add(X);
+
+        Y.setText("Y");
+        Y.setMaximumSize(new java.awt.Dimension(30, 30));
+        Y.setMinimumSize(new java.awt.Dimension(30, 30));
+        Y.setPreferredSize(new java.awt.Dimension(30, 30));
+        Y.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                YActionPerformed(evt);
+            }
+        });
+        jPanel13.add(Y);
+
+        transparencia.setValue(100);
+        transparencia.setMaximumSize(new java.awt.Dimension(70, 16));
+        transparencia.setMinimumSize(new java.awt.Dimension(70, 16));
+        transparencia.setPreferredSize(new java.awt.Dimension(70, 16));
+        transparencia.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                transparenciaStateChanged(evt);
+            }
+        });
+        jPanel13.add(transparencia);
+
+        cambioStroke.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/dashed-line.png"))); // NOI18N
+        cambioStroke.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cambioStrokeActionPerformed(evt);
+            }
+        });
+        jPanel13.add(cambioStroke);
+
         jToolBar1.add(jPanel13);
         jToolBar1.add(jSeparator3);
 
-        jPanel15.setMaximumSize(new java.awt.Dimension(100, 75));
-        jPanel15.setMinimumSize(new java.awt.Dimension(100, 75));
-        jPanel15.setPreferredSize(new java.awt.Dimension(100, 75));
+        jPanel15.setMaximumSize(new java.awt.Dimension(170, 75));
+        jPanel15.setMinimumSize(new java.awt.Dimension(170, 75));
+        jPanel15.setPreferredSize(new java.awt.Dimension(170, 75));
         jPanel15.setLayout(new javax.swing.BoxLayout(jPanel15, javax.swing.BoxLayout.LINE_AXIS));
 
-        jComboBox2.setToolTipText("");
-        jComboBox2.setBorder(javax.swing.BorderFactory.createTitledBorder("Colores"));
-        jComboBox2.setMaximumSize(new java.awt.Dimension(100, 75));
-        jComboBox2.setMinimumSize(new java.awt.Dimension(100, 75));
-        jComboBox2.setPreferredSize(new java.awt.Dimension(100, 75));
-        jComboBox2.addActionListener(new java.awt.event.ActionListener() {
+        ListaColores.setToolTipText("Color Linea");
+        ListaColores.setBorder(javax.swing.BorderFactory.createTitledBorder("Colores"));
+        ListaColores.setMaximumSize(new java.awt.Dimension(100, 75));
+        ListaColores.setMinimumSize(new java.awt.Dimension(100, 75));
+        ListaColores.setPreferredSize(new java.awt.Dimension(100, 75));
+        ListaColores.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jComboBox2ActionPerformed(evt);
+                ListaColoresActionPerformed(evt);
             }
         });
-        jPanel15.add(jComboBox2);
+        jPanel15.add(ListaColores);
+
+        paleta.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/painter-palette.png"))); // NOI18N
+        paleta.setMaximumSize(new java.awt.Dimension(56, 32));
+        paleta.setMinimumSize(new java.awt.Dimension(56, 32));
+        paleta.setPreferredSize(new java.awt.Dimension(56, 32));
+        paleta.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                paletaActionPerformed(evt);
+            }
+        });
+        jPanel15.add(paleta);
 
         jToolBar1.add(jPanel15);
 
+        jPanel10.setMaximumSize(new java.awt.Dimension(100, 75));
+        jPanel10.setLayout(new javax.swing.BoxLayout(jPanel10, javax.swing.BoxLayout.LINE_AXIS));
+
+        ListaRelleno.setToolTipText("Color Relleno");
+        ListaRelleno.setBorder(javax.swing.BorderFactory.createTitledBorder("Relleno"));
+        ListaRelleno.setMaximumSize(new java.awt.Dimension(100, 75));
+        ListaRelleno.setMinimumSize(new java.awt.Dimension(100, 75));
+        ListaRelleno.setPreferredSize(new java.awt.Dimension(100, 75));
+        ListaRelleno.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ListaRellenoActionPerformed(evt);
+            }
+        });
+        jPanel10.add(ListaRelleno);
+
+        jToolBar1.add(jPanel10);
+
+        jPanel16.setMaximumSize(new java.awt.Dimension(100, 75));
+        jPanel16.setMinimumSize(new java.awt.Dimension(100, 75));
+        jPanel16.setPreferredSize(new java.awt.Dimension(100, 75));
+        jPanel16.setLayout(new javax.swing.BoxLayout(jPanel16, javax.swing.BoxLayout.LINE_AXIS));
+
+        listaEditar.setBorder(javax.swing.BorderFactory.createTitledBorder("Editar Figura"));
+        listaEditar.setMaximumSize(new java.awt.Dimension(100, 75));
+        listaEditar.setMinimumSize(new java.awt.Dimension(100, 75));
+        listaEditar.setPreferredSize(new java.awt.Dimension(100, 75));
+        listaEditar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                listaEditarActionPerformed(evt);
+            }
+        });
+        jPanel16.add(listaEditar);
+
+        jToolBar1.add(jPanel16);
+
+        jPanel17.setMaximumSize(new java.awt.Dimension(350, 75));
+        jPanel17.setMinimumSize(new java.awt.Dimension(350, 75));
+        jPanel17.setPreferredSize(new java.awt.Dimension(350, 75));
+        jPanel17.setLayout(new javax.swing.BoxLayout(jPanel17, javax.swing.BoxLayout.LINE_AXIS));
+
+        botonPlay.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/play24x24.png"))); // NOI18N
+        botonPlay.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                botonPlayActionPerformed(evt);
+            }
+        });
+        jPanel17.add(botonPlay);
+
+        botonStop.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/stop24x24.png"))); // NOI18N
+        botonStop.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                botonStopActionPerformed(evt);
+            }
+        });
+        jPanel17.add(botonStop);
+
+        listaCanciones.setMaximumSize(new java.awt.Dimension(150, 25));
+        listaCanciones.setMinimumSize(new java.awt.Dimension(150, 25));
+        listaCanciones.setPreferredSize(new java.awt.Dimension(150, 25));
+        jPanel17.add(listaCanciones);
+
+        grabar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/record24x24.png"))); // NOI18N
+        grabar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                grabarActionPerformed(evt);
+            }
+        });
+        jPanel17.add(grabar);
+
+        jToolBar1.add(jPanel17);
+
         getContentPane().add(jToolBar1, java.awt.BorderLayout.PAGE_START);
 
-        jDesktopPane1.setMaximumSize(new java.awt.Dimension(800, 800));
-        jDesktopPane1.setMinimumSize(new java.awt.Dimension(800, 800));
+        jDesktopPane1.setMaximumSize(new java.awt.Dimension(1500, 800));
+        jDesktopPane1.setMinimumSize(new java.awt.Dimension(1500, 800));
         getContentPane().add(jDesktopPane1, java.awt.BorderLayout.CENTER);
         jDesktopPane1.getAccessibleContext().setAccessibleName("");
 
-        jMenuBar1.setMaximumSize(new java.awt.Dimension(800, 32769));
-        jMenuBar1.setMinimumSize(new java.awt.Dimension(800, 21));
-        jMenuBar1.setPreferredSize(new java.awt.Dimension(800, 21));
+        jMenuBar1.setMaximumSize(new java.awt.Dimension(1500, 21));
+        jMenuBar1.setMinimumSize(new java.awt.Dimension(1500, 21));
+        jMenuBar1.setPreferredSize(new java.awt.Dimension(1500, 21));
 
         menuArchivo.setText("Archivo");
+        menuArchivo.setToolTipText("Nuevo");
 
+        itemNuevo.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_1, java.awt.event.InputEvent.CTRL_MASK));
         itemNuevo.setText("Nuevo");
+        itemNuevo.setToolTipText("Abrir");
         itemNuevo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 itemNuevoActionPerformed(evt);
@@ -607,6 +972,7 @@ public class principal extends javax.swing.JFrame {
 
         itemAbrir.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
         itemAbrir.setText("Abrir");
+        itemAbrir.setToolTipText("Guardar");
         itemAbrir.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 itemAbrirActionPerformed(evt);
@@ -623,28 +989,9 @@ public class principal extends javax.swing.JFrame {
         });
         menuArchivo.add(itemGuardar);
 
-        submenuImprimir.setText("Imprimir");
-
-        itemImpersora.setText("Impresora");
-        submenuImprimir.add(itemImpersora);
-
-        itemFichero.setText("Fichero");
-        submenuImprimir.add(itemFichero);
-
-        menuArchivo.add(submenuImprimir);
-
         jMenuBar1.add(menuArchivo);
 
         menuEditar.setText("Editar");
-
-        itemCopiar.setText("Copiar");
-        menuEditar.add(itemCopiar);
-
-        itemCortar.setText("Cortar");
-        menuEditar.add(itemCortar);
-
-        itemPegar.setText("Pegar");
-        menuEditar.add(itemPegar);
 
         jMenuItem1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.event.InputEvent.ALT_MASK));
         jMenuItem1.setText("Ver/Ocultar Barra de estado");
@@ -656,7 +1003,7 @@ public class principal extends javax.swing.JFrame {
         menuEditar.add(jMenuItem1);
 
         jMenuItem2.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_B, java.awt.event.InputEvent.ALT_MASK));
-        jMenuItem2.setText("Ver/Ocultar Grosor");
+        jMenuItem2.setText("Ver/Ocultar Formas");
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem2ActionPerformed(evt);
@@ -665,7 +1012,7 @@ public class principal extends javax.swing.JFrame {
         menuEditar.add(jMenuItem2);
 
         jMenuItem3.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.event.InputEvent.ALT_MASK));
-        jMenuItem3.setText("Ver/Ocultar Propiedades");
+        jMenuItem3.setText("Ver/Ocultar Editar Imagenes");
         jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem3ActionPerformed(evt);
@@ -676,6 +1023,7 @@ public class principal extends javax.swing.JFrame {
         jMenuBar1.add(menuEditar);
 
         menuImagen.setText("Imagen");
+        menuImagen.setToolTipText("Rescalado");
 
         rescale.setText("RescaleOp");
         rescale.addActionListener(new java.awt.event.ActionListener() {
@@ -684,9 +1032,6 @@ public class principal extends javax.swing.JFrame {
             }
         });
         menuImagen.add(rescale);
-
-        convolve.setText("ConvolveOp");
-        menuImagen.add(convolve);
 
         afine.setText("AfineTransformOp");
         afine.addActionListener(new java.awt.event.ActionListener() {
@@ -704,24 +1049,93 @@ public class principal extends javax.swing.JFrame {
         });
         menuImagen.add(banda);
 
-        jMenuItem4.setText("BandCombineOp");
+        jMenuBar1.add(menuImagen);
+
+        jMenu1.setText("Ayuda");
+
+        jMenuItem5.setText("Acerca de");
+        jMenuItem5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem5ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem5);
+
+        jMenuItem4.setText("Manual");
         jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem4ActionPerformed(evt);
             }
         });
-        menuImagen.add(jMenuItem4);
+        jMenu1.add(jMenuItem4);
 
-        coverter.setText("ColorConvertOp");
-        menuImagen.add(coverter);
-
-        jMenuBar1.add(menuImagen);
+        jMenuBar1.add(jMenu1);
 
         setJMenuBar(jMenuBar1);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    public JSpinner getSpinnerStroke() {
+        return spinnerStroke;
+    }
+    
+    public JToggleButton getCambioStroke() {
+        return cambioStroke;
+    }
+
+    public JSlider getTransparencia() {
+        return transparencia;
+    }
+  
+    
+    
+    public JFormattedTextField getCX() {
+        return X;
+    }
+
+    public JFormattedTextField getCY() {
+        return Y;
+    }
+    
+    
+    public JComboBox<String> getDegradado() {
+        return Degradado;
+    }
+
+    public JComboBox<Color> getListaColores() {
+        return ListaColores;
+    }
+
+    public JComboBox<Color> getListaRelleno() {
+        return ListaRelleno;
+    }
+
+    public JToggleButton getBotonAlisar() {
+        return botonAlisar;
+    }
+
+    public JToggleButton getBotonCirculo() {
+        return botonCirculo;
+    }
+
+    public JToggleButton getBotonLapiz() {
+        return botonLapiz;
+    }
+
+    public JToggleButton getBotonRaya() {
+        return botonRaya;
+    }
+
+    public JToggleButton getBotonRectangulo() {
+        return botonRectangulo;
+    }
+
+    public JToggleButton getBotonRelleno() {
+        return botonRelleno;
+    }
+    
+    
     private void generarMascara(int n){
         mascara = new float[n*n];
         for (int i = 0; i < n*n; ++i){
@@ -729,8 +1143,6 @@ public class principal extends javax.swing.JFrame {
         }
        
     }
-    
-    
     
     public static void formaAnterior(javax.swing.event.InternalFrameEvent evt){
         VentanaInterna vi = new VentanaInterna();
@@ -755,28 +1167,48 @@ public class principal extends javax.swing.JFrame {
         }
         
         Color c = vi.getLienzo().getColor();
-       
-        if (c.equals(Color.red)){
-            jComboBox2.setSelectedIndex(0);
-        }else if (c.equals(Color.black)){
-            jComboBox2.setSelectedIndex(1);
-        }else if(c.equals(Color.white)){
-            jComboBox2.setSelectedIndex(4);
-        }else if (c.equals(Color.blue)){
-            jComboBox2.setSelectedIndex(2);
-        }else if (c.equals(Color.yellow)){
-            jComboBox2.setSelectedIndex(5);
-        }else if (c.equals(Color.green)){
-            jComboBox2.setSelectedIndex(3);
-        }
-
         
+        if (c.equals(Color.red)){
+            ListaColores.setSelectedIndex(0);
+        }else if (c.equals(Color.black)){
+            ListaColores.setSelectedIndex(1);
+        }else if(c.equals(Color.white)){
+            ListaColores.setSelectedIndex(4);
+        }else if (c.equals(Color.blue)){
+            ListaColores.setSelectedIndex(2);
+        }else if (c.equals(Color.yellow)){
+            ListaColores.setSelectedIndex(5);
+        }else if (c.equals(Color.green)){
+            ListaColores.setSelectedIndex(3);
+        }
+        
+        c = vi.getLienzo().getColorRelleno();
+        
+        if (c.equals(Color.red)){
+            ListaRelleno.setSelectedIndex(0);
+        }else if (c.equals(Color.black)){
+            ListaRelleno.setSelectedIndex(1);
+        }else if(c.equals(Color.white)){
+            ListaRelleno.setSelectedIndex(4);
+        }else if (c.equals(Color.blue)){
+            ListaRelleno.setSelectedIndex(2);
+        }else if (c.equals(Color.yellow)){
+            ListaRelleno.setSelectedIndex(5);
+        }else if (c.equals(Color.green)){
+            ListaRelleno.setSelectedIndex(3);
+        }
+        cambioStroke.setSelected(vi.getLienzo().getStrokeActivado());
         botonAlisar.setSelected(vi.getLienzo().isRender());
-        botonSeleccionar.setSelected(vi.getLienzo().isEditar());
-        botonTransparencia.setSelected(vi.getLienzo().isCompose());
         botonRelleno.setSelected(vi.getLienzo().isRelleno());
-        jSpinner1.setValue(vi.getLienzo().getStrokeValue());
+        spinnerStroke.setValue(vi.getLienzo().getStrokeValue());
        
+        listaEditar.removeAllItems();
+        listaEditar.addItem((Object)def);
+        
+        for (FormasGraficos shape : vi.getLienzo().getvShape()) {
+            listaEditar.addItem(shape);
+        }
+        
     }           
     
     private void itemGuardarMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_itemGuardarMousePressed
@@ -839,66 +1271,108 @@ public class principal extends javax.swing.JFrame {
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
         // TODO add your handling code here:
-        
-        if(jLabel1.isVisible()){
-            this.jLabel1.setVisible(false);
-        }else{
-            this.jLabel1.setVisible(true);
-        }
+        this.jLabel1.setVisible(!jLabel1.isVisible());
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void itemNuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemNuevoActionPerformed
         // TODO add your handling code here:
         
+        this.botonNuevo.setSelected(false);
+        
         VentanaInterna vi = new VentanaInterna();
-        vi.getLienzo().setFormaLienzo(formas.Puntos);
+        BufferedImage img;
+        if (!bandas){
+            JOptionPane a = new JOptionPane("Indica el tamanio de la imagen");
+            String tamanio = JOptionPane.showInputDialog(a, "Indica el tamanio de la imagen. Ejemplo 500x500");
+            String[] tam = tamanio.split("x");
+            String tam1 = tam[0];
+            String tam2 = tam[1];
+            vi.getLienzo().setFormaLienzo(formas.Puntos);
+            vi.getLienzo().setAncho(Integer.parseInt(tam1));
+            vi.getLienzo().setAlto(Integer.parseInt(tam2));
+            img = new BufferedImage(Integer.parseInt(tam1),Integer.parseInt(tam2),BufferedImage.TYPE_INT_RGB);
+            vi.setTitle(tituloBanda);
+        }else{
+            VentanaInterna vActual = (VentanaInterna) jDesktopPane1.getSelectedFrame();
+            bandas= false;
+            img = new BufferedImage(vActual.getLienzo().getIm().getWidth(),vActual.getLienzo().getIm().getHeight(),BufferedImage.TYPE_INT_RGB);
+        }
         this.botonLapiz.setSelected(true);
-        jComboBox2.setSelectedIndex(0);
+        vi.setTitle("Ventana " + n);
         jDesktopPane1.add(vi);
         vi.setVisible(true);
-        BufferedImage img;
-        img = new BufferedImage(300,300,BufferedImage.TYPE_INT_RGB);
+        vi.getLienzo().addLienzoListener(manejador);
         vi.getLienzo().setIm(img);
- 
         
-        
+        n++;
     }//GEN-LAST:event_itemNuevoActionPerformed
 
-    private void jSpinner1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSpinner1StateChanged
+    private void spinnerStrokeStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerStrokeStateChanged
         // TODO add your handling code here:
         VentanaInterna vi = new VentanaInterna();
+        
         vi = (VentanaInterna)jDesktopPane1.getSelectedFrame();
-        if (vi != null){
-            vi.getLienzo().setStroke((int)jSpinner1.getValue());
+        if (vi != null && vi.getLienzo().isEditar()){
+            vi.getLienzo().setStroke((int)spinnerStroke.getValue());
+            vi.getLienzo().getFormaGraficos().setCambioStroke((int)spinnerStroke.getValue());
             vi.getLienzo().repaint();
         }
-    }//GEN-LAST:event_jSpinner1StateChanged
+    }//GEN-LAST:event_spinnerStrokeStateChanged
 
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
         // TODO add your handling code here:
-        
+        this.jToolBar1.setVisible(!jToolBar1.isVisible());
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
-        
+        this.jPanel7.setVisible(!jPanel7.isVisible());
     }//GEN-LAST:event_jMenuItem3ActionPerformed
 
     private void itemAbrirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemAbrirActionPerformed
         // TODO add your handling code here:
         JFileChooser dlg = new JFileChooser();
+        FileFilter filterWav = new FileNameExtensionFilter("WAV File","wav");
+        FileFilter filterAu = new FileNameExtensionFilter("AU File","au");
+        FileFilter filterAif = new FileNameExtensionFilter("AIF File","aif");
+        FileFilter filterJpg = new FileNameExtensionFilter("JPG File","jpg");
+        FileFilter filterPng = new FileNameExtensionFilter("PNG File","png");
+        dlg.setFileFilter(filterWav);
+        dlg.setFileFilter(filterAu);
+        dlg.setFileFilter(filterAif);
+        dlg.setFileFilter(filterJpg);
+        dlg.setFileFilter(filterPng);
+        
+
         int resp = dlg.showOpenDialog(this);
         if( resp == JFileChooser.APPROVE_OPTION) {
             try{
-                jComboBox2.setSelectedIndex(0);
                 File f = dlg.getSelectedFile();
-                BufferedImage img = ImageIO.read(f);
-                prIm = img;
-                VentanaInterna vi = new VentanaInterna();
-                vi.getLienzo().setIm(img);
-                this.jDesktopPane1.add(vi);
-                vi.setTitle(f.getName());
-                vi.setVisible(true);
-                vi.getLienzo().setCargada(true);
+                File f2 = new File(f.getAbsolutePath()){
+                    @Override
+                    public String toString(){
+                    return this.getName();
+                    }
+                };    
+            
+                String[] tam = f.toString().split("\\.");
+                String tam2 = tam[1];
+                if (!tam2.equals("jpg") && !tam2.equals("png")){
+                    this.listaCanciones.addItem(f2);
+                    this.listaCanciones.setSelectedItem(f2);
+                }else{
+                    BufferedImage img = ImageIO.read(f);
+                    prIm = img;
+                    VentanaInterna vi = new VentanaInterna();
+                    vi.getLienzo().setIm(img);
+                    this.jDesktopPane1.add(vi);
+                    vi.getLienzo().setAncho(img.getWidth());
+                    vi.getLienzo().setAlto(img.getHeight());
+                    vi.setTitle(f.getName());
+                    vi.setVisible(true);
+                    vi.getLienzo().setCargada(true);
+                    vi.getLienzo().addLienzoListener(manejador);
+                    focoPerdido = false;
+                }
             }catch(Exception ex){
                 System.err.println("Error al leer la imagen");
             }
@@ -908,34 +1382,78 @@ public class principal extends javax.swing.JFrame {
     private void botonNuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonNuevoActionPerformed
         // TODO add your handling code here:
         this.botonNuevo.setSelected(false);
+        
         VentanaInterna vi = new VentanaInterna();
-        vi.getLienzo().setFormaLienzo(formas.Puntos);
-        jComboBox2.setSelectedIndex(0);
-        this.botonLapiz.setSelected(true);
-        jDesktopPane1.add(vi);
-        vi.setVisible(true); 
         BufferedImage img;
-        img = new BufferedImage(300,300,BufferedImage.TYPE_INT_RGB);
+        if (!bandas){
+            JOptionPane a = new JOptionPane("Indica el tamanio de la imagen");
+            String tamanio = JOptionPane.showInputDialog(a, "Indica el tamanio de la imagen. Ejemplo 500x500");
+            String[] tam = tamanio.split("x");
+            String tam1 = tam[0];
+            String tam2 = tam[1];
+            vi.getLienzo().setFormaLienzo(formas.Puntos);
+            vi.getLienzo().setAncho(Integer.parseInt(tam1));
+            vi.getLienzo().setAlto(Integer.parseInt(tam2));
+            img = new BufferedImage(Integer.parseInt(tam1),Integer.parseInt(tam2),BufferedImage.TYPE_INT_RGB);
+            vi.setTitle(tituloBanda);
+        }else{
+            VentanaInterna vActual = (VentanaInterna) jDesktopPane1.getSelectedFrame();
+            bandas= false;
+            img = new BufferedImage(vActual.getLienzo().getIm().getWidth(),vActual.getLienzo().getIm().getHeight(),BufferedImage.TYPE_INT_RGB);
+        }
+        this.botonLapiz.setSelected(true);
+        vi.setTitle("Ventana " + n);
+        jDesktopPane1.add(vi);
+        vi.setVisible(true);
+        vi.getLienzo().addLienzoListener(manejador);
         vi.getLienzo().setIm(img);
+        
+        n++;
     }//GEN-LAST:event_botonNuevoActionPerformed
 
     private void botonAbrirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonAbrirActionPerformed
         // TODO add your handling code here:
-        this.botonAbrir.setSelected(false);
-        jComboBox2.setSelectedIndex(0);
         JFileChooser dlg = new JFileChooser();
+        FileFilter filterWav = new FileNameExtensionFilter("WAV File","wav");
+        FileFilter filterAu = new FileNameExtensionFilter("AU File","au");
+        FileFilter filterAif = new FileNameExtensionFilter("AIF File","aif");
+        FileFilter filterJpg = new FileNameExtensionFilter("JPG File","jpg");
+        dlg.setFileFilter(filterWav);
+        dlg.setFileFilter(filterAu);
+        dlg.setFileFilter(filterAif);
+        dlg.setFileFilter(filterJpg);
+        
+
         int resp = dlg.showOpenDialog(this);
         if( resp == JFileChooser.APPROVE_OPTION) {
             try{
                 File f = dlg.getSelectedFile();
-                BufferedImage img = ImageIO.read(f);
-                prIm = img;
-                VentanaInterna vi = new VentanaInterna();
-                vi.getLienzo().setIm(img);
-                this.jDesktopPane1.add(vi);
-                vi.setTitle(f.getName());
-                vi.setVisible(true);
-                vi.getLienzo().setCargada(true);
+                File f2 = new File(f.getAbsolutePath()){
+                    @Override
+                    public String toString(){
+                    return this.getName();
+                    }
+                };    
+            
+                String[] tam = f.toString().split("\\.");
+                String tam2 = tam[1];
+                if (!tam2.equals("jpg") && !tam2.equals("png")){
+                    this.listaCanciones.addItem(f2);
+                    this.listaCanciones.setSelectedItem(f2);
+                }else{
+                    BufferedImage img = ImageIO.read(f);
+                    prIm = img;
+                    VentanaInterna vi = new VentanaInterna();
+                    vi.getLienzo().setIm(img);
+                    this.jDesktopPane1.add(vi);
+                    vi.getLienzo().setAncho(img.getWidth());
+                    vi.getLienzo().setAlto(img.getHeight());
+                    vi.setTitle(f.getName());
+                    vi.setVisible(true);
+                    vi.getLienzo().setCargada(true);
+                    vi.getLienzo().addLienzoListener(manejador);
+                    focoPerdido = false;
+                }
             }catch(Exception ex){
                 System.err.println("Error al leer la imagen");
             }
@@ -970,8 +1488,9 @@ public class principal extends javax.swing.JFrame {
         if (vi != null) {
             if(vi.getLienzo().getIm()!=null){
                 try{
+                    mainImage = vi.getLienzo().getIm();
                     RescaleOp rop = new RescaleOp(1.0F, 100.0F, null);
-                    BufferedImage imdest = rop.filter(mainImage, vi.getLienzo().getIm());
+                    BufferedImage imdest = rop.filter(mainImage, mainImage);
                     vi.getLienzo().setIm(imdest);
                     vi.getLienzo().repaint();
                 }catch(IllegalArgumentException e){
@@ -1026,7 +1545,6 @@ public class principal extends javax.swing.JFrame {
     private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
         // TODO add your handling code here:
         String estado = (String)jComboBox1.getSelectedItem();
-        boolean clean = false;
         Kernel k = null;
         VentanaInterna vi = (VentanaInterna)(jDesktopPane1.getSelectedFrame());
         
@@ -1052,7 +1570,6 @@ public class principal extends javax.swing.JFrame {
             
         }else if (estado.equals("Deshacer")){
             vi.getLienzo().setIm(prIm);
-            System.out.println("gola");
             vi.getLienzo().repaint();
             k = null;
         }
@@ -1065,47 +1582,29 @@ public class principal extends javax.swing.JFrame {
                    BufferedImage imdest = cop.filter(mainImage, null);
                    vi.getLienzo().setIm(imdest);
                    vi.getLienzo().repaint();
-                   clean = false;
                }
             }
         }
         
     }//GEN-LAST:event_jComboBox1ActionPerformed
 
-    private void botonSeleccionarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonSeleccionarActionPerformed
-        // TODO add your handling code here:
-        VentanaInterna vi = new VentanaInterna();
-        vi = (VentanaInterna)jDesktopPane1.getSelectedFrame();
-        if (vi != null){
-            vi.getLienzo().setEditar(botonSeleccionar.isSelected());
-            vi.getLienzo().repaint();
-        }
-    }//GEN-LAST:event_botonSeleccionarActionPerformed
-
     private void botonAlisarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonAlisarActionPerformed
         // TODO add your handling code here:
         VentanaInterna vi = new VentanaInterna();
         vi = (VentanaInterna)jDesktopPane1.getSelectedFrame();
-        if (vi != null){
-            vi.getLienzo().setRender(this.botonAlisar.isSelected());
+        if (vi != null && vi.getLienzo().isEditar()){
+            vi.getLienzo().getFormaGraficos().setRender(this.botonAlisar.isSelected());
             vi.getLienzo().repaint();
         }
     }//GEN-LAST:event_botonAlisarActionPerformed
-
-    private void botonTransparenciaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonTransparenciaActionPerformed
-        // TODO add your handling code here:
-        VentanaInterna vi = new VentanaInterna();
-        vi = (VentanaInterna)jDesktopPane1.getSelectedFrame();
-        vi.getLienzo().setCompose(this.botonTransparencia.isSelected());
-        vi.getLienzo().repaint();
-    }//GEN-LAST:event_botonTransparenciaActionPerformed
 
     private void botonRellenoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonRellenoActionPerformed
         // TODO add your handling code here:
         VentanaInterna vi = new VentanaInterna();
         vi = (VentanaInterna)jDesktopPane1.getSelectedFrame();
-        if (vi != null){
-            vi.getLienzo().setRelleno(this.botonRelleno.isSelected());
+        if (vi != null ){
+            vi.getLienzo().getFormaGraficos().setIsRelleno(this.botonRelleno.isSelected());
+            vi.getLienzo().setIsRelleno(this.botonRelleno.isSelected());
             vi.getLienzo().repaint();
         }
     }//GEN-LAST:event_botonRellenoActionPerformed
@@ -1189,49 +1688,12 @@ public class principal extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jSlider3StateChanged
 
-    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
-        // TODO add your handling code here:
-        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
-        
-        if (vi != null) {
-            if(vi.getLienzo().getIm()!=null){
-                try{
-                    mainImage = vi.getLienzo().getIm();
-                    ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-                    ComponentColorModel cm = new ComponentColorModel(cs, false, false,
-                    Transparency.OPAQUE,
-                    DataBuffer.TYPE_BYTE);
-              
-                    for (int i = 0; i < 3; i++) {
-                        
-                        int bandList[] = {i};
-                        WritableRaster bandRaster2 = (WritableRaster)mainImage.getRaster().createWritableChild(0,0,
-                        mainImage.getWidth(), mainImage.getHeight(), 0, 0, bandList);
-                        BufferedImage imgBanda = new BufferedImage(cm, bandRaster2, false, null);
-
-                        botonNuevoActionPerformed(evt);
-                        VentanaInterna nueva = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
-                        
-                        nueva.getLienzo().setIm(imgBanda);
-                        nueva.getLienzo().setCargada(true);
-                        nueva.setTitle(Integer.toString(i));
-                        nueva.getLienzo().repaint();
-                    }
-                    
-                    
-                }catch(IllegalArgumentException e){
-                    System.err.println(e.getLocalizedMessage());
-                }
-            }
-        }
-        
-    }//GEN-LAST:event_jMenuItem4ActionPerformed
-
     private void gamasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_gamasActionPerformed
         // TODO add your handling code here:
         VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
         BufferedImage salida = null;
         ColorConvertOp cop = null;
+        bandas = true;
         if (vi != null) {
             if(vi.getLienzo().getIm()!=null){
                 try{
@@ -1338,7 +1800,6 @@ public class principal extends javax.swing.JFrame {
             if(vi.getLienzo().getIm()!=null){
                 try{
                     mainImage = vi.getLienzo().getIm();
-                    byte f[] = new byte[256];
                     double w = Math.toRadians(180.0/255.0);
                     LookupTable lt;
                     lt = seno(w);
@@ -1373,7 +1834,7 @@ public class principal extends javax.swing.JFrame {
                 WritableRaster bandRaster = (WritableRaster) mainImage.getRaster().createWritableChild(0, 0,
                 mainImage.getWidth(), mainImage.getHeight(), 0, 0, bandList);
                 BufferedImage imgBanda = new BufferedImage(cm, bandRaster, false, null);
-                
+                bandas = true;
                 botonNuevoActionPerformed(evt);
                 VentanaInterna nueva = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
                 nueva.getLienzo().setIm(imgBanda);
@@ -1489,37 +1950,503 @@ public class principal extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jButton4ActionPerformed
 
-    private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox2ActionPerformed
+    private void ListaColoresActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ListaColoresActionPerformed
         // TODO add your handling code here:
         VentanaInterna vi = new VentanaInterna();
         vi = (VentanaInterna)jDesktopPane1.getSelectedFrame();
-        int c = jComboBox2.getSelectedIndex();
+        Color c = (Color) ListaColores.getSelectedItem();
         if (vi != null){
-            if(c == 0){
-                vi.getLienzo().setColor(Color.red);
+            
+            vi.getLienzo().setColor(c);
+        }
+        if (vi.getLienzo().getFormaGraficos() != null && vi.getLienzo().getFormaGraficos().isEditar() ){
+            vi.getLienzo().setColor(Color.red);
+            vi.getLienzo().getFormaGraficos().setColor(c);
+            vi.getLienzo().repaint();
+        }
+        
+    }//GEN-LAST:event_ListaColoresActionPerformed
+
+    private void ListaRellenoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ListaRellenoActionPerformed
+        // TODO add your handling code here:
+        VentanaInterna vi = new VentanaInterna();
+        vi = (VentanaInterna)jDesktopPane1.getSelectedFrame();
+        Color c = (Color) ListaRelleno.getSelectedItem();
+        if (vi != null){
+            
+            vi.getLienzo().setColorRelleno(c);
+        }
+        if (vi.getLienzo().getFormaGraficos() != null && vi.getLienzo().getFormaGraficos().isEditar() ){
+            vi.getLienzo().setColor(c);
+            vi.getLienzo().getFormaGraficos().setRelleno(c);
+            vi.getLienzo().repaint();
+        }
+    }//GEN-LAST:event_ListaRellenoActionPerformed
+
+    private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
+        // TODO add your handling code here:
+        JOptionPane.showMessageDialog(rootPane, "Painter el editor definitivo.\nVersión 0.3.\nAutor Julio José Reyes Hurtado\nGithub/Gitlab: @jhaos");
+    }//GEN-LAST:event_jMenuItem5ActionPerformed
+
+    private void listaEditarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_listaEditarActionPerformed
+        // TODO add your handling code here:
+        VentanaInterna vi = (VentanaInterna)jDesktopPane1.getSelectedFrame();
+        if (vi != null){
+            if (listaEditar.getSelectedIndex() > 0){
+                vi.getLienzo().setEditar(true);
+                vi.getLienzo().setFormaGraficos((FormasGraficos)listaEditar.getModel().getSelectedItem());
+                vi.getLienzo().getFormaGraficos().setEditar(true);
+                for (FormasGraficos form : vi.getLienzo().getvShape()) {
+                    if (!form.equals(listaEditar.getSelectedItem())){
+                        form.setEditar(false);
+                    }
+                }
                 vi.getLienzo().repaint();
-            }else if (c == 1){
-                vi.getLienzo().setColor(Color.black);
-                vi.getLienzo().repaint();
-            }else if (c == 2){
-                vi.getLienzo().setColor(Color.blue);
-                vi.getLienzo().repaint();
-            }else if (c == 3){
-                vi.getLienzo().setColor(Color.green);
-                vi.getLienzo().repaint();
-            }else if (c == 4){
-                vi.getLienzo().setColor(Color.white);
-                vi.getLienzo().repaint();
-            }else if (c == 5){
-                vi.getLienzo().setColor(Color.yellow);
+            }else{
+                vi.getLienzo().setEditar(false);
+                if (vi.getLienzo().getFormaGraficos()!= null){
+                    vi.getLienzo().getFormaGraficos().setEditar(false);
+                }
                 vi.getLienzo().repaint();
             }
         }
-        
-        
-        
-    }//GEN-LAST:event_jComboBox2ActionPerformed
+    }//GEN-LAST:event_listaEditarActionPerformed
 
+    private void botonPlayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonPlayActionPerformed
+        // TODO add your handling code here:
+        File f = (File)listaCanciones.getSelectedItem();
+        if(f!=null){
+        player = new SMClipPlayer(f);
+            if (player != null) {
+                player.play();
+            }   
+        }
+    }//GEN-LAST:event_botonPlayActionPerformed
+
+    private void botonStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonStopActionPerformed
+        // TODO add your handling code here:
+        File f = (File)listaCanciones.getSelectedItem();
+        if(f!=null){
+            if (player != null) {
+                player.stop();
+            }   
+        }
+    }//GEN-LAST:event_botonStopActionPerformed
+
+    private void grabarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_grabarActionPerformed
+        // TODO add your handling code here:
+        File f = (File) listaCanciones.getSelectedItem();
+        if(!grabar.isSelected()){
+            recorder = new SMSoundRecorder(f);
+            recorder.record();
+            grabar.setSelected(true);
+        }else{
+            grabar.setSelected(false);
+            recorder.stop();
+        }
+    }//GEN-LAST:event_grabarActionPerformed
+
+    private void DegradadoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DegradadoActionPerformed
+        // TODO add your handling code here:
+        VentanaInterna vi = (VentanaInterna)jDesktopPane1.getSelectedFrame();
+        if (vi.getLienzo() != null){
+            if(this.Degradado.getSelectedItem() == "Horizontal"){
+                vi.getLienzo().getFormaGraficos().setIsGradienteH(!vi.getLienzo().getFormaGraficos().getIsGradienteH());
+            }else if (this.Degradado.getSelectedItem() == "Vertical"){
+                vi.getLienzo().getFormaGraficos().setIsGradienteV(!vi.getLienzo().getFormaGraficos().getIsGradienteV());
+            }else if(this.Degradado.getSelectedItem() == "Diagonal"){
+                vi.getLienzo().getFormaGraficos().setIsGradienteD(!vi.getLienzo().getFormaGraficos().getIsGradienteD());
+            }else if(this.Degradado.getSelectedItem() == "Relleno"){
+                vi.getLienzo().getFormaGraficos().setIsGradienteH(false);
+                vi.getLienzo().getFormaGraficos().setIsGradienteV(false);
+                vi.getLienzo().getFormaGraficos().setIsGradienteD(false);
+            }
+            vi.getLienzo().repaint();
+        }
+    }//GEN-LAST:event_DegradadoActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
+        if (vi != null) {
+            if(vi.getLienzo().getIm()!=null){
+                try{
+                    mainImage = vi.getLienzo().getIm();
+                    TintOp tintado = new TintOp((Color)ListaColores.getSelectedItem(),0.5f);
+                    BufferedImage imdest = tintado.filter(mainImage, null);
+                    vi.getLienzo().setIm(imdest);
+                    vi.getLienzo().repaint();
+                }catch(IllegalArgumentException e){
+                    System.err.println(e.getLocalizedMessage());
+                }
+            }
+        }
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void ecualizadorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ecualizadorActionPerformed
+        // TODO add your handling code here:
+        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
+        if (vi != null) {
+            if(vi.getLienzo().getIm()!=null){
+                try{
+                    mainImage = vi.getLienzo().getIm();
+                    EqualizationOp ecualizacion = new EqualizationOp();
+                    BufferedImage imdest = ecualizacion.filter(mainImage, null);
+                    vi.getLienzo().setIm(imdest);
+                    vi.getLienzo().repaint();
+                }catch(IllegalArgumentException e){
+                    System.err.println(e.getLocalizedMessage());
+                }
+            }
+        }
+    }//GEN-LAST:event_ecualizadorActionPerformed
+
+    private void sepiaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sepiaActionPerformed
+        // TODO add your handling code here:
+        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
+        if (vi != null) {
+            if(vi.getLienzo().getIm()!=null){
+                try{
+                    mainImage = vi.getLienzo().getIm();
+                    SepiaOp sepia = new SepiaOp();
+                    BufferedImage imdest = sepia.filter(mainImage, null);
+                    vi.getLienzo().setIm(imdest);
+                    vi.getLienzo().repaint();
+                }catch(IllegalArgumentException e){
+                    System.err.println(e.getLocalizedMessage());
+                }
+            }
+        }
+    }//GEN-LAST:event_sepiaActionPerformed
+
+    private void umbralizacionStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_umbralizacionStateChanged
+        // TODO add your handling code here:
+        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
+        if (vi != null) {
+            if(vi.getLienzo().getIm()!=null){
+                try{
+                    mainImage = vi.getLienzo().getIm();
+                    if (!focoPerdido){
+                        mainImage= prIm;
+                        UmbralizacionOp umb = new UmbralizacionOp(this.umbralizacion.getValue());
+                        BufferedImage imdest = umb.filter(mainImage, null);
+                        vi.getLienzo().setIm(imdest);
+                        vi.getLienzo().repaint();
+                    }
+                    
+                }catch(IllegalArgumentException e){
+                    System.err.println(e.getLocalizedMessage());
+                }
+            }
+        }
+    }//GEN-LAST:event_umbralizacionStateChanged
+
+    private void umbralizacionMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_umbralizacionMouseReleased
+        // TODO add your handling code here:
+        focoPerdido = true;
+    }//GEN-LAST:event_umbralizacionMouseReleased
+
+    private void sumaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sumaActionPerformed
+        // TODO add your handling code here:
+
+        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
+        if (vi != null) {
+            VentanaInterna viNext = (VentanaInterna) jDesktopPane1.selectFrame(false);
+            if (viNext != null) {
+                BufferedImage imgRight = vi.getLienzo().getIm();
+                BufferedImage imgLeft = viNext.getLienzo().getIm();
+                if (imgRight != null && imgLeft != null) {
+                    try {
+                        BlendOp op = new BlendOp(imgLeft);
+                        BufferedImage imgdest = op.filter(imgRight, null);
+                        vi = new VentanaInterna();
+                        vi.getLienzo().setIm(imgdest);
+                        vi.setTitle("Suma");
+                        this.jDesktopPane1.add(vi);
+                        vi.setVisible(true);
+                        vi.getLienzo().setCargada(true);
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Error: "+e.getLocalizedMessage());
+                    }
+                }
+            }
+        }
+    }//GEN-LAST:event_sumaActionPerformed
+
+    private void lagoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lagoActionPerformed
+        // TODO add your handling code here:
+        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
+        if (vi != null) {
+            if(vi.getLienzo().getIm()!=null){
+                try{
+                    mainImage = vi.getLienzo().getIm();
+                    if (!focoPerdido){
+                        LagoOp lag = new LagoOp();
+                        BufferedImage imdest = lag.filter(mainImage, null);
+                        vi.getLienzo().setIm(imdest);
+                        vi.getLienzo().repaint();
+                    }
+                    
+                }catch(IllegalArgumentException e){
+                    System.err.println(e.getLocalizedMessage());
+                }
+            }
+        }
+    }//GEN-LAST:event_lagoActionPerformed
+
+    private void opCompActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opCompActionPerformed
+        // TODO add your handling code here:
+        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
+        if (vi != null) {
+            if(vi.getLienzo().getIm()!=null){
+                try{
+                    mainImage = vi.getLienzo().getIm();
+                    efectoComp tri = new efectoComp();
+                    BufferedImage imdest = tri.filter(mainImage, null);
+                    vi.getLienzo().setIm(imdest);
+                    vi.getLienzo().repaint();
+                }catch(IllegalArgumentException e){
+                    System.err.println(e.getLocalizedMessage());
+                }
+            }
+        }
+    }//GEN-LAST:event_opCompActionPerformed
+
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
+        if (vi != null) {
+            if(vi.getLienzo().getIm()!=null){
+                try{
+                    mainImage = vi.getLienzo().getIm();
+                    DivideDupOp div = new DivideDupOp();
+                    BufferedImage imdest = div.filter(mainImage, null);
+                    vi.getLienzo().setIm(imdest);
+                    vi.getLienzo().repaint();
+                }catch(IllegalArgumentException e){
+                    System.err.println(e.getLocalizedMessage());
+                }
+            }
+        }
+    }//GEN-LAST:event_jButton5ActionPerformed
+
+    private void sliderTintadoStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_sliderTintadoStateChanged
+        // TODO add your handling code here:
+        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
+        float nivelTintado = (float)this.sliderTintado.getValue()/100.0f;
+        if (vi != null) {
+            if(vi.getLienzo().getIm()!=null){
+                try{
+                    TintOp tintado = new TintOp((Color)ListaColores.getSelectedItem(),0.0f);
+                    mainImage = vi.getLienzo().getIm();
+                    if (!focoPerdido){
+                        mainImage = prIm;
+                        tintado = new TintOp((Color)ListaColores.getSelectedItem(), nivelTintado);
+                    }
+                    this.nivelTintado.setText(Float.toString(nivelTintado));
+                    BufferedImage imdest = tintado.filter(mainImage, null);
+                    vi.getLienzo().setIm(imdest);
+                    vi.getLienzo().repaint();
+                }catch(IllegalArgumentException e){
+                    System.err.println(e.getLocalizedMessage());
+                }
+            }
+        }
+    }//GEN-LAST:event_sliderTintadoStateChanged
+
+    private void restaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_restaActionPerformed
+        // TODO add your handling code here:
+        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
+        if (vi != null) {
+            VentanaInterna viNext = (VentanaInterna) jDesktopPane1.selectFrame(false);
+            if (viNext != null) {
+                BufferedImage imgRight = vi.getLienzo().getIm();
+                BufferedImage imgLeft = viNext.getLienzo().getIm();
+                if (imgRight != null && imgLeft != null) {
+                    try {
+                        SubtractionOp op = new SubtractionOp(imgLeft);
+                        BufferedImage imgdest = op.filter(imgRight, null);
+                        vi = new VentanaInterna();
+                        vi.getLienzo().setIm(imgdest);
+                        vi.setTitle("Resta");
+                        this.jDesktopPane1.add(vi);
+                        vi.setVisible(true);
+                        vi.getLienzo().setCargada(true);
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Error: "+e.getLocalizedMessage());
+                    }
+                }
+            }
+        }
+    }//GEN-LAST:event_restaActionPerformed
+
+    private void XActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_XActionPerformed
+        // TODO add your handling code here:
+        int x = Integer.parseInt(X.getText());
+        int y = Integer.parseInt(Y.getText());
+        
+        cambioLocalizacion(x, y);
+    }//GEN-LAST:event_XActionPerformed
+
+    private void YActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_YActionPerformed
+        // TODO add your handling code here:
+        int x = Integer.parseInt(X.getText());
+        int y = Integer.parseInt(Y.getText());
+        
+        cambioLocalizacion(x, y);
+    }//GEN-LAST:event_YActionPerformed
+
+    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
+        // TODO add your handling code here:
+        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
+        if (vi != null) {
+            if(vi.getLienzo().getIm()!=null){
+                try{
+                    mainImage = vi.getLienzo().getIm();
+                    Negativo neg = new Negativo();
+                    BufferedImage imdest = neg.filter(mainImage, null);
+                    vi.getLienzo().setIm(imdest);
+                    vi.getLienzo().repaint();
+                }catch(IllegalArgumentException e){
+                    System.err.println(e.getLocalizedMessage());
+                }
+            }
+        }
+    }//GEN-LAST:event_jButton6ActionPerformed
+
+    private void transparenciaStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_transparenciaStateChanged
+        // TODO add your handling code here:
+        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
+        if (vi != null) {
+            float valorComp = transparencia.getValue() / 100f;
+            if (valorComp <= 1.0){
+                vi.getLienzo().getFormaGraficos().setCompose(true);
+            }else
+                vi.getLienzo().getFormaGraficos().setCompose(false);
+            
+            vi.getLienzo().getFormaGraficos().setCambioTranspacencia(valorComp);
+            vi.getLienzo().repaint();
+        }
+    }//GEN-LAST:event_transparenciaStateChanged
+
+    private void cambioStrokeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cambioStrokeActionPerformed
+        // TODO add your handling code here:
+        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
+        
+        if (vi != null){
+            if (cambioStroke.isSelected()){
+                vi.getLienzo().setStrokeActivado(true);
+                vi.getLienzo().getFormaGraficos().setIsStroke(true);
+            }else{
+                vi.getLienzo().getFormaGraficos().setIsStroke(false);
+                vi.getLienzo().setStrokeActivado(true);
+            }
+            vi.getLienzo().repaint();
+        }
+    }//GEN-LAST:event_cambioStrokeActionPerformed
+
+    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+        // TODO add your handling code here:
+        VentanaInterna vActual = (VentanaInterna)jDesktopPane1.getSelectedFrame();
+        
+        VentanaInterna vi = new VentanaInterna();
+        BufferedImage nueva = duplicar(vActual.getLienzo().getImage(true));
+        
+        vi.getLienzo().setIm(nueva);
+        
+        this.jDesktopPane1.add(vi);
+        vi.getLienzo().setAncho(nueva.getWidth());
+        vi.getLienzo().setAlto(nueva.getHeight());
+        vi.setTitle("Duplicado");
+        vi.setVisible(true);
+        vi.getLienzo().setCargada(true);
+        vi.getLienzo().addLienzoListener(manejador);
+    }//GEN-LAST:event_jButton7ActionPerformed
+
+    private void paletaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_paletaActionPerformed
+        // TODO add your handling code here:
+        Color c = JColorChooser.showDialog(null, "Paleta de colores", Color.yellow);
+        ListaColores.addItem(c);
+        ListaRelleno.addItem(c);
+    }//GEN-LAST:event_paletaActionPerformed
+
+    private void sliderTintadoFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_sliderTintadoFocusLost
+        // TODO add your handling code here:
+        focoPerdido = true;
+    }//GEN-LAST:event_sliderTintadoFocusLost
+
+    private void asinActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_asinActionPerformed
+        // TODO add your handling code here:
+        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
+        if (vi != null) {
+            if(vi.getLienzo().getIm()!=null){
+                try{
+                    mainImage = vi.getLienzo().getIm();
+                    LookupTable lt;
+                    lt = asin();
+                    LookupOp lop = new LookupOp(lt, null);
+                    BufferedImage imdest = lop.filter( mainImage,null);
+                    vi.getLienzo().setIm(imdest);
+                    vi.getLienzo().repaint();
+                }catch(IllegalArgumentException e){
+                    System.err.println(e.getLocalizedMessage());
+                }
+            }
+        }
+    }//GEN-LAST:event_asinActionPerformed
+
+    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
+        // TODO add your handling code here:
+        URI uri = URI.create("https://github.com/jhaos/Paint/blob/master/Documentacion%20pr%C3%A1ctica%20Paint%20SM.pdf");
+        openWebpage(uri);
+    }//GEN-LAST:event_jMenuItem4ActionPerformed
+
+    
+    public static void openWebpage(URI uri) {
+        Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+        if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+            try {
+                desktop.browse(uri);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    
+    
+    public LookupTable asin(){
+ 
+        double K = 255.0;
+        byte lt[] = new byte[256];
+        lt[0]=0;
+        for (int i=1; i<256; ++i){
+            lt[i] = (byte)((K*Math.asin(i*0.0025))%K);
+        }
+        
+        ByteLookupTable slt = new ByteLookupTable(0,lt);
+        return slt;
+    } 
+
+    
+    BufferedImage duplicar(BufferedImage bi) {
+        ColorModel cm = bi.getColorModel();
+        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+        WritableRaster raster = bi.copyData(null);
+        
+        return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
+    }
+    
+    private void cambioLocalizacion(int x, int y){
+        VentanaInterna vi = (VentanaInterna) (jDesktopPane1.getSelectedFrame());
+        if (vi != null) {
+            Point p = new Point(x,y);
+            
+            vi.getLienzo().getFormaGraficos().setLocation(p);
+            vi.getLienzo().repaint();
+        }
+    }
+    
     public LookupTable seno(double w){
  
         double K = 255.0;
@@ -1527,9 +2454,8 @@ public class principal extends javax.swing.JFrame {
         lt[0]=0;
         for (int i=1; i<256; ++i){
             lt[i] = (byte)(K*(Math.sin(w*i)));
-            //if(lt[i]<0)
-                //lt[i]*=-1.0;
         }
+        
         ByteLookupTable slt = new ByteLookupTable(0,lt);
         return slt;
     }       
@@ -1541,7 +2467,13 @@ public class principal extends javax.swing.JFrame {
      */
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JComboBox<String> Degradado;
+    private static javax.swing.JComboBox<Color> ListaColores;
+    private static javax.swing.JComboBox<Color> ListaRelleno;
+    private javax.swing.JFormattedTextField X;
+    private javax.swing.JFormattedTextField Y;
     private javax.swing.JMenuItem afine;
+    private javax.swing.JButton asin;
     private javax.swing.JMenuItem banda;
     private javax.swing.JToggleButton botonAbrir;
     private static javax.swing.JToggleButton botonAlisar;
@@ -1549,48 +2481,52 @@ public class principal extends javax.swing.JFrame {
     private javax.swing.JToggleButton botonGuardar;
     private static javax.swing.JToggleButton botonLapiz;
     private javax.swing.JToggleButton botonNuevo;
+    private javax.swing.JButton botonPlay;
     private static javax.swing.JToggleButton botonRaya;
     private static javax.swing.JToggleButton botonRectangulo;
     private static javax.swing.JToggleButton botonRelleno;
-    private static javax.swing.JToggleButton botonSeleccionar;
-    private static javax.swing.JToggleButton botonTransparencia;
+    private javax.swing.JButton botonStop;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
+    private static javax.swing.JToggleButton cambioStroke;
     private javax.swing.JButton contraste;
-    private javax.swing.JMenuItem convolve;
-    private javax.swing.JMenuItem coverter;
+    private javax.swing.JButton ecualizador;
     private javax.swing.JComboBox<String> gamas;
     private javax.swing.JButton giro180;
     private javax.swing.JButton giro270;
     private javax.swing.JButton giro90;
+    private javax.swing.JButton grabar;
     private javax.swing.JButton iluminar;
     private javax.swing.JMenuItem itemAbrir;
-    private javax.swing.JMenuItem itemCopiar;
-    private javax.swing.JMenuItem itemCortar;
-    private javax.swing.JMenuItem itemFichero;
     private javax.swing.JMenuItem itemGuardar;
-    private javax.swing.JMenuItem itemImpersora;
     private javax.swing.JMenuItem itemNuevo;
-    private javax.swing.JMenuItem itemPegar;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
+    private javax.swing.JButton jButton5;
+    private javax.swing.JButton jButton6;
+    private javax.swing.JButton jButton7;
     private javax.swing.JComboBox<String> jComboBox1;
-    private static javax.swing.JComboBox jComboBox2;
     private javax.swing.JDesktopPane jDesktopPane1;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItem4;
+    private javax.swing.JMenuItem jMenuItem5;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel10;
     private javax.swing.JPanel jPanel11;
     private javax.swing.JPanel jPanel12;
     private javax.swing.JPanel jPanel13;
     private javax.swing.JPanel jPanel14;
     private javax.swing.JPanel jPanel15;
+    private javax.swing.JPanel jPanel16;
+    private javax.swing.JPanel jPanel17;
+    private javax.swing.JPanel jPanel18;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
@@ -1604,14 +2540,25 @@ public class principal extends javax.swing.JFrame {
     private javax.swing.JToolBar.Separator jSeparator3;
     private javax.swing.JSlider jSlider1;
     private javax.swing.JSlider jSlider3;
-    private static javax.swing.JSpinner jSpinner1;
     private javax.swing.JToolBar jToolBar1;
+    private javax.swing.JButton lago;
+    private javax.swing.JComboBox<File> listaCanciones;
+    protected static javax.swing.JComboBox<Object> listaEditar;
     private javax.swing.JMenu menuArchivo;
     private javax.swing.JMenu menuEditar;
     private javax.swing.JMenu menuImagen;
+    private javax.swing.JTextField nivelTintado;
+    private javax.swing.JButton opComp;
     private javax.swing.JButton oscurecer;
+    private javax.swing.JButton paleta;
     private javax.swing.JMenuItem rescale;
+    private javax.swing.JButton resta;
     private javax.swing.JButton seno;
-    private javax.swing.JMenu submenuImprimir;
+    private javax.swing.JButton sepia;
+    private javax.swing.JSlider sliderTintado;
+    private static javax.swing.JSpinner spinnerStroke;
+    private javax.swing.JButton suma;
+    private javax.swing.JSlider transparencia;
+    private javax.swing.JSlider umbralizacion;
     // End of variables declaration//GEN-END:variables
 }
