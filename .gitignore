@@ -6,5 +6,5 @@
 /sm.JJRH.Biblioteca/dist/
 /paint/dist/
 *.jar
-/DiagramaClases/
+DiagramaClases
 *.pdf
